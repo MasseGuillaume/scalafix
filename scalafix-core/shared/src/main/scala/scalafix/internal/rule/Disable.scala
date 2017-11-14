@@ -14,9 +14,7 @@ import scalafix.internal.config.DisableConfig
 import scalafix.internal.config.TargetSymbolsConfig
 import scalafix.syntax._
 
-final case class Disable(
-    index: SemanticdbIndex,
-    config: DisableConfig)
+final case class Disable(index: SemanticdbIndex, config: DisableConfig)
     extends SemanticRule(index, "Disable")
     with Product {
 
@@ -36,7 +34,7 @@ final case class Disable(
   }
 
   override def check(ctx: RuleCtx): Seq[LintMessage] = {
-    val keywordsLints = 
+    val keywordsLints =
       ctx.tree.tokens.collect {
         case token @ Keyword() if config.keywordsSet.contains(token.text) => {
           errorCategory

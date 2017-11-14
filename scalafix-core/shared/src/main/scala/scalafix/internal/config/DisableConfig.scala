@@ -5,8 +5,8 @@ import org.langmeta._
 import MetaconfigPendingUpstream.XtensionConfScalafix
 
 case class DisableConfig(
-  symbols: List[Symbol.Global] = Nil,
-  keywords: List[DisableConfig.Keyword] = Nil
+    symbols: List[Symbol.Global] = Nil,
+    keywords: List[DisableConfig.Keyword] = Nil
 ) {
   implicit val reader: ConfDecoder[DisableConfig] =
     ConfDecoder.instanceF[DisableConfig] { c =>
