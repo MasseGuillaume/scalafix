@@ -1,21 +1,16 @@
 /* ONLY
-rule = Disable
-Disable.keywords = [
+rule = DisableSyntax
+DisableSyntax.keywords = [
   "null"
   "return"
   "throw"
   "var"
   "while"
 ]
-Disable.symbols = [
-  "scala.Any.asInstanceOf"
-  "scala.Option.get"
-  "test.Disable.D.disabledFunction"
-]
 */
 package test
 
-case object Disable {
+case object DisableSyntax {
 
   case class B()
   val y = B().asInstanceOf[String] // assert: Disable.asInstanceOf
@@ -42,4 +37,15 @@ case object Disable {
   }
   val yy = AA.asInstanceOf // OK, no errors
   Option(1).get // assert: Disable.get
+
+  null // assert: Disable.null
+  def foo: Int = {
+    return 0 // assert: Disable.return
+  }
+  throw new Exception("Boom") // assert: Disable.throw
+  var ok = false // assert: Disable.var
+  while (!ok) { // assert: Disable.while
+    ok = true
+  }
+  implicit class Nope(v: Any) // assert: Disable.implicit
 }

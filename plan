@@ -1,0 +1,71 @@
+http://www.scalastyle.org/rules-1.0.0.html
+
+FileLengthChecker                     |   Check the number of lines in a file
+FileLineLengthChecker                 |   Check the number of characters in a line
+FileTabChecker                        |   Check that there are no tabs in a file
+HeaderMatchesChecker                  |   Check the first lines of each file matches the text
+IndentationChecker                    |   Checks that lines are indented by a multiple of the tab size
+NewLineAtEofChecker                   |   Checks that a file ends with a newline character
+NoNewLineAtEofChecker                 |   Checks that a file does not end with a newline character
+RegexChecker                          |   Checks that a regular expression cannot be matched, if found reports this
+WhitespaceEndOfLineChecker            |   Check that there is no trailing whitespace at the end of lines
+BlockImportChecker                    |   Checks that block imports are not used.
+ClassNamesChecker                     |   Check that class names match a regular expression
+ClassTypeParameterChecker             |   Checks that type parameter to a class matches a regular expression
+CovariantEqualsChecker                |   Check that classes and objects do not define equals without overriding equals(java.lang.Object).
+CyclomaticComplexityChecker           |   Checks that the cyclomatic complexity of a method does exceed a value
+DeprecatedJavaChecker                 |   Checks that Java @Deprecated is not used, Scala @deprecated should be used instead
+DisallowSpaceAfterTokenChecker        |   Disallow space after certain token(s)
+DisallowSpaceBeforeTokenChecker       |   Disallow space before certain token(s)
+EmptyClassChecker                     |   If a class/trait has no members, the braces are unnecessary
+EmptyInterpolatedStringChecker        |   The interpolation for this string literal is not necessary
+EnsureSingleSpaceAfterTokenChecker    |   Ensure single space after certain token(s)
+EnsureSingleSpaceBeforeTokenChecker   |   Ensure single space before certain token(s)
+EqualsHashCodeChecker                 |   Check that if a class implements either equals or hashCode, it should implement the other
+FieldNamesChecker                     |   Check that field names match a regular expression
+ForBraceChecker                       |   Checks that braces are used in for comprehensions
+IfBraceChecker                        |   Checks that if statements have braces
+IllegalImportsChecker                 |   Check that a class does not import certain classes
+ImportGroupingChecker                 |   Checks that imports are grouped together, not throughout the file
+ImportOrderChecker                    |   Checks that imports are grouped and ordered according to the style configuration.
+LowercasePatternMatchChecker          |   Checks that a case statement pattern match is not lower case, as this can cause confusion
+MagicNumberChecker                    |   Checks for use of magic numbers
+MethodArgumentNamesChecker            |   Check that method argument names match a regular expression
+MethodLengthChecker                   |   Checks that methods do not exceed a maximum length
+MethodNamesChecker                    |   Check that method names match a regular expression
+MultipleStringLiteralsChecker         |   Checks that a string literal does not appear multiple times
+NamedArgumentChecker                  |   Checks that argument literals are named
+NoCloneChecker                        |   Check that classes and objects do not define the clone() method
+NoFinalizeChecker                     |   Check that classes and objects do not define the finalize() method
+NoWhitespaceAfterLeftBracketChecker   |   No whitespace after left bracket '\['
+NoWhitespaceBeforeLeftBracketChecker  |   No whitespace before left bracket '\['
+NoWhitespaceBeforeRightBracketChecker |   No whitespace before right bracket '']''
+NonASCIICharacterChecker              |   Some editors are unfriendly to non ascii characters.
+NotImplementedErrorUsage              |   Checks that the code does not have ??? operators.
+NullChecker                           |   Check that null is not used
+NumberOfMethodsInTypeChecker          |   Check that a class / trait / object does not have too many methods
+NumberOfTypesChecker                  |   Checks that there are not too many types declared in a file
+ObjectNamesChecker                    |   Check that object names match a regular expression
+OverrideJavaChecker                   |   Checks that Java @Override is not used
+PackageNamesChecker                   |   Check that package names match a regular expression
+PackageObjectNamesChecker             |   Check that package object names match a regular expression
+ParameterNumberChecker                |   Maximum number of parameters for a method
+PatternMatchAlignChecker              |   Check that pattern match arrows align
+ProcedureDeclarationChecker           |   Use a : Unit = for procedure declarations
+PublicMethodsHaveTypeChecker          |   Check that a method has an explicit return type, it is not inferred
+RedundantIfChecker                    |   Checks that if expressions are not redundant, i.e. easily replaced by a variant of the condition
+ReturnChecker                         |   Check that return is not used
+ScalaDocChecker                       |   Checks that the ScalaDoc on documentable members is well-formed
+SimplifyBooleanExpressionChecker      |   Boolean expression can be simplified
+SpaceAfterCommentStartChecker         |   Checks a space after the start of the comment.
+SpacesAfterPlusChecker                |   Check that the plus sign is followed by a space
+SpacesBeforePlusChecker               |   Check that the plus sign is preceded by a space
+StructuralTypeChecker                 |   Check that structural types are not used.
+TodoCommentChecker                    |   Check for use of TODO/FIXME single line comments
+TokenChecker                          |   Checks that a regular expression cannot be matched in a token, if found reports this
+UnderscoreImportChecker               |   Avoid wildcard imports
+UppercaseLChecker                     |   Checks that if a long literal is used, then an uppercase L is used
+VarFieldChecker                       |   Checks that classes and objects do not define mutable fields
+VarLocalChecker                       |   Checks that functions do not define mutable variables
+WhileChecker                          |   Checks that while is not used
+XmlLiteralChecker                     |   Check that XML literals are not used
