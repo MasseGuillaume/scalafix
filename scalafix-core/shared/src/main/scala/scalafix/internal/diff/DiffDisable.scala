@@ -1,4 +1,4 @@
-package scalafix.internal.jgit
+package scalafix.internal.diff
 
 import metaconfig.Configured
 
@@ -13,12 +13,21 @@ import scalafix.internal.util.IntervalSet
 import scalafix.LintMessage
 
 object DiffDisable {
-  def apply(workingDir: Path, diffBase: String): Configured[DiffDisable] = {
-    JGitDiff(workingDir, diffBase).map(diffs => new DiffDisable(diffs))
-  }
+  def empty: DiffDisable = EmptyDiff
+  def apply(diffs: List[GitDiff]): DiffDisable = new FullDiffDisable(diffs)
 }
 
-class DiffDisable(diffs: List[GitDiff]) {
+sealed trait DiffDisable {
+  def isDisabled(position: Position): Boolean
+  def isDisabled(file: Input): Boolean
+}
+
+private object EmptyDiff extends DiffDisable {
+  def isDisabled(position: Position): Boolean = false
+  def isDisabled(file: Input): Boolean = false
+}
+
+private class FullDiffDisable(diffs: List[GitDiff]) extends DiffDisable {
   private val newFiles: Set[Input] = diffs.collect {
     case NewFile(path) => Input.File(path)
   }.toSet
@@ -35,7 +44,7 @@ class DiffDisable(diffs: List[GitDiff]) {
   def isDisabled(file: Input): Boolean =
     !(newFiles.contains(file) || modifiedFiles.contains(file))
 
-  def isEnabled(position: Position): Boolean = {
+  def isDisabled(position: Position): Boolean = {
     def isAddition: Boolean =
       newFiles.contains(position.input)
 
@@ -53,7 +62,7 @@ class DiffDisable(diffs: List[GitDiff]) {
         )
     }
 
-    isAddition || isModification
+    !(isAddition || isModification)
   }
 
   override def toString: String = {
