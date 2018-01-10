@@ -2,4 +2,7 @@
 
 HERE="`dirname $0`"
 
+# make shure to run sbt cli/assembly
+
 java -jar "$HERE/.cross/cli/target/scala-2.12/scalafix.jar" $@
+  
