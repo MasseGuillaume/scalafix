@@ -1,6 +1,10 @@
 package scalafix
 package testkit
 
+import scalafix.internal.diff.{DiffDisable, ModifiedFile, GitChange}
+
+import org.eclipse.jgit.diff.{RawText, RawTextComparator, MyersDiff}
+
 import scalafix.syntax._
 import scala.meta._
 import scalafix.internal.util.EagerInMemorySemanticdbIndex
@@ -10,6 +14,8 @@ import org.scalatest.FunSuite
 import org.scalatest.exceptions.TestFailedException
 
 import scala.util.matching.Regex
+
+import scala.collection.JavaConverters._
 
 object SemanticRuleSuite {
 
@@ -36,22 +42,26 @@ object SemanticRuleSuite {
 
 abstract class SemanticRuleSuite(
     val index: SemanticdbIndex,
-    val expectedOutputSourceroot: Seq[AbsolutePath]
+    val expectedOutputSourceroot: Seq[AbsolutePath],
+    val inputBeforeSourceroot: AbsolutePath
 ) extends FunSuite
     with DiffAssertions
     with BeforeAndAfterAll { self =>
   def this(
       index: SemanticdbIndex,
       inputSourceroot: AbsolutePath,
-      expectedOutputSourceroot: Seq[AbsolutePath]
+      expectedOutputSourceroot: Seq[AbsolutePath],
+      inputBeforeSourceroot: AbsolutePath
   ) = this(
     index,
-    expectedOutputSourceroot
+    expectedOutputSourceroot,
+    inputBeforeSourceroot
   )
   def this(
       database: Database,
       inputSourceroot: AbsolutePath,
-      expectedOutputSourceroot: Seq[AbsolutePath]
+      expectedOutputSourceroot: Seq[AbsolutePath],
+      inputBeforeSourceroot: AbsolutePath
   ) =
     this(
       EagerInMemorySemanticdbIndex(
@@ -59,7 +69,8 @@ abstract class SemanticRuleSuite(
         Sourcepath(inputSourceroot),
         Classpath(Nil)),
       inputSourceroot,
-      expectedOutputSourceroot
+      expectedOutputSourceroot,
+      inputBeforeSourceroot
     )
 
   private def dialectToPath(dialect: String): Option[String] =
@@ -70,10 +81,35 @@ abstract class SemanticRuleSuite(
 
   def runOn(diffTest: DiffTest): Unit = {
     test(diffTest.name) {
+      val diffFile =
+        inputBeforeSourceroot
+          .resolve("src")
+          .resolve("main")
+          .resolve(diffTest.filename)
+
+      val diffDisable =
+        if (diffFile.isFile) {
+          val before = new RawText(diffFile.readAllBytes)
+          val after = new RawText(diffTest.original.text.getBytes)
+          val editList =
+            MyersDiff.INSTANCE.diff(
+              RawTextComparator.DEFAULT,
+              before,
+              after
+            )
+
+          val changes = editList.asScala
+            .map(edit => GitChange(edit.getBeginB, edit.getEndB))
+            .toList
+
+          DiffDisable(List(ModifiedFile(diffTest.original, changes)))
+        } else DiffDisable.empty
+
       val (rule, config) = diffTest.config.apply()
       val ctx: RuleCtx = RuleCtx(
         config.dialect(diffTest.original).parse[Source].get,
-        config.copy(dialect = diffTest.document.dialect)
+        config.copy(dialect = diffTest.document.dialect),
+        diffDisable
       )
       val patches = rule.fixWithName(ctx)
       val (obtainedWithComment, obtainedLintMessages) =

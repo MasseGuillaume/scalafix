@@ -27,6 +27,8 @@ object Dependencies {
   def scalameta = Def.setting("org.scalameta" %%% "contrib" % scalametaV)
   def scalatest = Def.setting("org.scalatest" %%% "scalatest" % "3.0.0")
 
+  def jgit: ModuleID = "org.eclipse.jgit" % "org.eclipse.jgit" % "4.5.4.201711221230-r"
+
   def testsDeps = List(
     // integration property tests
     "org.renucci" %% "scala-xml-quote" % "0.1.4",

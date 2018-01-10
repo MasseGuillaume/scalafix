@@ -369,7 +369,7 @@ class CliGitDiffTests() extends FunSuite with DiffAssertions {
     def run(ok: Boolean, args: List[String]): String = {
       val baos = new ByteArrayOutputStream()
       val ps = new PrintStream(baos)
-      cli.Cli.runMain(
+      val exit = cli.Cli.runMain(
         args.to[Seq],
         CommonOptions(
           workingDirectory = workingDirectory.toAbsolutePath.toString,

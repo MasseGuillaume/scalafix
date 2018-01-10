@@ -1,16 +1,11 @@
 package scalafix.internal.diff
 
-import metaconfig.Configured
-
-import java.nio.file.Path
-
 import scala.meta.inputs.Input
 import scala.meta.Position
 
 import scala.collection.mutable.StringBuilder
 
 import scalafix.internal.util.IntervalSet
-import scalafix.LintMessage
 
 object DiffDisable {
   def empty: DiffDisable = EmptyDiff
@@ -29,15 +24,15 @@ private object EmptyDiff extends DiffDisable {
 
 private class FullDiffDisable(diffs: List[GitDiff]) extends DiffDisable {
   private val newFiles: Set[Input] = diffs.collect {
-    case NewFile(path) => Input.File(path)
+    case NewFile(input) => input
   }.toSet
 
   private val modifiedFiles: Map[Input, IntervalSet] = diffs.collect {
-    case ModifiedFile(path, changes) => {
+    case ModifiedFile(input, changes) => {
       val ranges = changes.map {
         case GitChange(start, end) => (start, end)
       }
-      Input.File(path) -> IntervalSet(ranges)
+      input -> IntervalSet(ranges)
     }
   }.toMap
 

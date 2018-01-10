@@ -151,7 +151,7 @@ val cli = MultiScalaProject(
       "com.github.alexarchambault" %% "case-app" % "1.2.0",
       "org.typelevel" %% "paiges-core" % "0.2.0",
       "com.martiansoftware" % "nailgun-server" % "0.9.1",
-      "org.eclipse.jgit" % "org.eclipse.jgit" % "4.5.4.201711221230-r",
+      jgit,
       "ch.qos.logback" % "logback-classic" % "1.2.3"
     )
   )
@@ -208,6 +208,7 @@ val testkit = MultiScalaProject(
   _.settings(
     isFullCrossVersion,
     libraryDependencies ++= Seq(
+      jgit,
       semanticdb,
       ammonite,
       googleDiff,
@@ -367,6 +368,8 @@ def unit(
           sourceDirectory.in(testsOutputDotty, Compile).value,
         "outputSbtSourceroot" ->
           sourceDirectory.in(testsOutputSbt, Compile).value,
+        "inputBeforeSourceroot" ->
+          baseDirectory.in(ThisBuild).value / "scalafix-tests/input-before",
         "semanticSbtClasspath" ->
           classDirectory.in(testsInputSbt, Compile).value,
         "semanticClasspath" ->
