@@ -6,6 +6,7 @@ import java.io.PrintStream
 import scala.meta._
 import scala.meta.dialects.Scala212
 import scala.meta.parsers.Parse
+import scala.meta.internal.io.PathIO
 import metaconfig._
 
 case class ScalafixConfig(
@@ -16,7 +17,8 @@ case class ScalafixConfig(
     reporter: ScalafixReporter = ScalafixReporter.default,
     patches: ConfigRulePatches = ConfigRulePatches.default,
     dialect: Dialect = ScalafixConfig.DefaultDialect,
-    lint: LintConfig = LintConfig.default
+    lint: LintConfig = LintConfig.default,
+    sourceroot: AbsolutePath = PathIO.workingDirectory
 ) {
 
   def withFreshReporters: ScalafixConfig = copy(

@@ -2,7 +2,7 @@ package scalafix.internal.jgit
 
 import java.nio.file.Path
 
-import scala.meta.inputs.Input
+import scala.meta.AbsolutePath
 import scalafix.internal.diff._
 
 import org.eclipse.jgit.util.FS
@@ -30,30 +30,30 @@ import metaconfig.{ConfError, Configured}
 
 object JGitDiff {
   def apply(workingDir: Path, diffBase: String): Configured[DiffDisable] = {
-
     if (isGitRepository(workingDir)) {
       val builder = new FileRepositoryBuilder()
       val repository =
         builder.readEnvironment().setWorkTree(workingDir.toFile).build()
-
       resolve(repository, diffBase) match {
         case Right(id) => {
           iterator(repository, id) match {
             case Right(oldTree) => {
               val newTree = new FileTreeIterator(repository)
-              def path(relative: String): Path = workingDir.resolve(relative)
+
+              def absolutePath(relative: String): AbsolutePath =
+                AbsolutePath(workingDir).resolve(relative)
 
               def edits(file: FileHeader): ModifiedFile = {
                 val changes =
                   file.toEditList.asScala.map(edit =>
                     GitChange(edit.getBeginB, edit.getEndB))
 
-                ModifiedFile(Input.File(path(file.getNewPath)), changes.toList)
+                ModifiedFile(absolutePath(file.getNewPath), changes.toList)
               }
               val diffs =
                 getDiff(repository, oldTree, newTree).flatMap(file =>
                   file.getChangeType match {
-                    case ADD => List(NewFile(Input.File(path(file.getNewPath))))
+                    case ADD => List(NewFile(absolutePath(file.getNewPath)))
                     case MODIFY => List(edits(file))
                     case RENAME => List(edits(file))
                     case COPY => List(edits(file))

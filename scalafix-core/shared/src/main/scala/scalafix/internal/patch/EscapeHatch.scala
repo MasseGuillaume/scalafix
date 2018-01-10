@@ -71,7 +71,9 @@ class EscapeHatch(
       patchesByName: Map[RuleName, Patch],
       ctx: RuleCtx,
       index: SemanticdbIndex,
-      diff: DiffDisable): (Patch, List[LintMessage]) = {
+      diff: DiffDisable,
+      sourceroot: AbsolutePath): (Patch, List[LintMessage]) = {
+
     val usedEscapes = mutable.Set.empty[EscapeOffset]
     val lintMessages = List.newBuilder[LintMessage]
 
@@ -88,7 +90,7 @@ class EscapeHatch(
         val hasDisabledPatch = {
           val patches = Patch.treePatchApply(underlying)(ctx, index)
           patches.exists { tp =>
-            val byGit = diff.isDisabled(tp.tok.pos)
+            val byGit = diff.isDisabled(tp.tok.pos, sourceroot)
             val byEscape = disabledByEscape(name.toString, tp.tok.pos.start)
             byGit || byEscape
           }
@@ -103,7 +105,7 @@ class EscapeHatch(
       case LintPatch(orphanLint) =>
         val lint = orphanLint.withOwner(name)
 
-        val byGit = diff.isDisabled(lint.position)
+        val byGit = diff.isDisabled(lint.position, sourceroot)
         val byEscape = disabledByEscape(lint.id, lint.position.start)
 
         val isLintDisabled = byGit || byEscape

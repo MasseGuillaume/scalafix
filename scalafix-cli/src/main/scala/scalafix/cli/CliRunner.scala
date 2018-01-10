@@ -422,24 +422,25 @@ object CliRunner {
     }
 
     val fixFiles: Configured[Seq[FixFile]] = diffDisable.andThen(diffDisable0 =>
-      resolvedPathMatcher.andThen { pathMatcher =>
-        val paths =
-          if (cli.files.nonEmpty) cli.files.map(AbsolutePath(_))
-          // If no files are provided, assume cwd.
-          else common.workingPath :: Nil
-        val allFiles = paths.toVector.flatMap(expand(pathMatcher))
+      (resolvedPathMatcher |@| resolvedSourceroot).andThen {
+        case (pathMatcher, sourceroot) =>
+          val paths =
+            if (cli.files.nonEmpty) cli.files.map(AbsolutePath(_))
+            // If no files are provided, assume cwd.
+            else common.workingPath :: Nil
+          val allFiles = paths.toVector.flatMap(expand(pathMatcher))
 
-        val allFilesExcludingDiffs =
-          allFiles.filterNot(fixFile =>
-            diffDisable0.isDisabled(fixFile.original))
+          val allFilesExcludingDiffs =
+            allFiles.filterNot(fixFile =>
+              diffDisable0.isDisabled(fixFile.original, sourceroot))
 
-        if (allFilesExcludingDiffs.isEmpty) {
-          ConfError
-            .msg(
-              s"No files to fix! Missing at least one .scala or .sbt file from: " +
-                paths.mkString(", "))
-            .notOk
-        } else Ok(allFilesExcludingDiffs)
+          if (allFilesExcludingDiffs.isEmpty) {
+            ConfError
+              .msg(
+                s"No files to fix! Missing at least one .scala or .sbt file from: " +
+                  paths.mkString(", "))
+              .notOk
+          } else Ok(allFilesExcludingDiffs)
     })
 
     val resolvedConfigInput: Configured[Input] =
@@ -468,15 +469,23 @@ object CliRunner {
     //  - ScalafixConfig.default
     val resolvedRuleAndConfig: Configured[(Rule, ScalafixConfig)] = {
       val decoder = ScalafixReflect.fromLazySemanticdbIndex(lazySemanticdbIndex)
-      fixFiles.andThen { inputs =>
-        val configured = resolvedConfigInput.andThen(input =>
-          ScalafixConfig.fromInput(input, lazySemanticdbIndex, rules)(decoder))
-        configured.map { configuration =>
-          // TODO(olafur) implement withFilter on Configured
-          val (finalRule, scalafixConfig) = configuration
-          val finalConfig = scalafixConfig.withOut(common.err)
-          finalRule -> finalConfig
-        }
+      (fixFiles |@| resolvedSourceroot).andThen {
+        case (inputs, sourceroot) =>
+          val configured = resolvedConfigInput
+            .andThen(
+              input =>
+                ScalafixConfig.fromInput(input, lazySemanticdbIndex, rules)(
+                  decoder))
+            .map {
+              case (rule, config) =>
+                (rule, config.copy(sourceroot = sourceroot))
+            }
+          configured.map { configuration =>
+            // TODO(olafur) implement withFilter on Configured
+            val (finalRule, scalafixConfig) = configuration
+            val finalConfig = scalafixConfig.withOut(common.err)
+            finalRule -> finalConfig
+          }
       }
     }
     val resolvedRule: Configured[Rule] =

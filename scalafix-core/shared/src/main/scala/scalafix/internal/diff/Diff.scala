@@ -1,9 +1,10 @@
 package scalafix.internal.diff
 
-import scala.meta.inputs.Input
+import scala.meta.AbsolutePath
 
 case class GitChange(start: Int, length: Int)
 
 sealed trait GitDiff
-case class NewFile(input: Input) extends GitDiff
-case class ModifiedFile(input: Input, changes: List[GitChange]) extends GitDiff
+case class NewFile(path: AbsolutePath) extends GitDiff
+case class ModifiedFile(path: AbsolutePath, changes: List[GitChange])
+    extends GitDiff

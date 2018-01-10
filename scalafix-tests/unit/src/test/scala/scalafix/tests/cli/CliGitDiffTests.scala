@@ -16,254 +16,324 @@ import scalafix.internal.cli.CommonOptions
 import scalafix.testkit.DiffAssertions
 
 class CliGitDiffTests() extends FunSuite with DiffAssertions {
-  gitTest("addition") { (fs, git, cli) =>
-    val oldCode = "old.scala"
-    val newCode = "new.scala"
-    val newCodeAbsPath = fs.absPath(newCode)
+  // gitTest("addition") { (fs, git, cli) =>
+  //   val oldCode = "old.scala"
+  //   val newCode = "new.scala"
+  //   val newCodeAbsPath = fs.absPath(newCode)
 
-    fs.add(
-      oldCode,
-      """|object OldCode {
-         |  // This is old code, where var's blossom
-         |  var oldVar = 1
-         |}""".stripMargin)
-    git.add(oldCode)
-    addConf(fs, git)
-    git.commit()
+  //   fs.add(
+  //     oldCode,
+  //     """|object OldCode {
+  //        |  // This is old code, where var's blossom
+  //        |  var oldVar = 1
+  //        |}""".stripMargin)
+  //   git.add(oldCode)
+  //   addDisableSyntaxConf(fs, git)
+  //   git.commit()
 
-    git.checkout("pr-1")
+  //   git.checkout("pr-1")
 
-    fs.add(
-      newCode,
-      """|object NewCode {
-         |  // New code, no vars
-         |  var newVar = 1
-         |}""".stripMargin)
-    git.add(newCode)
-    git.commit()
+  //   fs.add(
+  //     newCode,
+  //     """|object NewCode {
+  //        |  // New code, no vars
+  //        |  var newVar = 1
+  //        |}""".stripMargin)
+  //   git.add(newCode)
+  //   git.commit()
 
-    val obtained = runDiff(cli)
+  //   val obtained = runDiff(cli)
 
-    val expected =
-      s"""|Running DisableSyntax
-          |$newCodeAbsPath:3:3: error: [DisableSyntax.keywords.var] var is disabled
-          |  var newVar = 1
-          |  ^
-          |""".stripMargin
+  //   val expected =
+  //     s"""|Running DisableSyntax
+  //         |$newCodeAbsPath:3:3: error: [DisableSyntax.keywords.var] var is disabled
+  //         |  var newVar = 1
+  //         |  ^
+  //         |""".stripMargin
 
-    assertNoDiff(obtained, expected)
-  }
+  //   assertNoDiff(obtained, expected)
+  // }
 
-  gitTest("modification") { (fs, git, cli) =>
-    val oldCode = "old.scala"
-    val oldCodeAbsPath = fs.absPath(oldCode)
+  // gitTest("modification") { (fs, git, cli) =>
+  //   val oldCode = "old.scala"
+  //   val oldCodeAbsPath = fs.absPath(oldCode)
 
-    fs.add(
-      oldCode,
-      """|object OldCode {
-         |  // This is old code, where var's blossom
-         |  var oldVar = 1
-         |}""".stripMargin)
-    git.add(oldCode)
-    addConf(fs, git)
-    git.commit()
+  //   fs.add(
+  //     oldCode,
+  //     """|object OldCode {
+  //        |  // This is old code, where var's blossom
+  //        |  var oldVar = 1
+  //        |}""".stripMargin)
+  //   git.add(oldCode)
+  //   addDisableSyntaxConf(fs, git)
+  //   git.commit()
 
-    git.checkout("pr-1")
-    fs.replace(
-      oldCode,
-      """|object OldCode {
-         |  // This is old code, where var's blossom
-         |  var oldVar = 1
-         |}
-         |object NewCode {
-         |  // It's not ok to add new vars
-         |  var newVar = 2
-         |}""".stripMargin
-    )
-    git.add(oldCode)
-    git.commit()
+  //   git.checkout("pr-1")
+  //   fs.replace(
+  //     oldCode,
+  //     """|object OldCode {
+  //        |  // This is old code, where var's blossom
+  //        |  var oldVar = 1
+  //        |}
+  //        |object NewCode {
+  //        |  // It's not ok to add new vars
+  //        |  var newVar = 2
+  //        |}""".stripMargin
+  //   )
+  //   git.add(oldCode)
+  //   git.commit()
 
-    val obtained = runDiff(cli)
+  //   val obtained = runDiff(cli)
 
-    val expected =
-      s"""|Running DisableSyntax
-          |$oldCodeAbsPath:7:3: error: [DisableSyntax.keywords.var] var is disabled
-          |  var newVar = 2
-          |  ^
-          |""".stripMargin
+  //   val expected =
+  //     s"""|Running DisableSyntax
+  //         |$oldCodeAbsPath:7:3: error: [DisableSyntax.keywords.var] var is disabled
+  //         |  var newVar = 2
+  //         |  ^
+  //         |""".stripMargin
 
-    assertNoDiff(obtained, expected)
-  }
+  //   assertNoDiff(obtained, expected)
+  // }
 
-  gitTest("rename") { (fs, git, cli) =>
-    val oldCode = "old.scala"
-    val newCode = "new.scala"
-    val newCodeAbsPath = fs.absPath(newCode)
+  // gitTest("rename") { (fs, git, cli) =>
+  //   val oldCode = "old.scala"
+  //   val newCode = "new.scala"
+  //   val newCodeAbsPath = fs.absPath(newCode)
 
-    fs.add(
-      oldCode,
-      """|object OldCode {
-         |  // This is old code, where var's blossom
-         |  var oldVar = 1
-         |}""".stripMargin)
-    git.add(oldCode)
-    addConf(fs, git)
-    git.commit()
+  //   fs.add(
+  //     oldCode,
+  //     """|object OldCode {
+  //        |  // This is old code, where var's blossom
+  //        |  var oldVar = 1
+  //        |}""".stripMargin)
+  //   git.add(oldCode)
+  //   addDisableSyntaxConf(fs, git)
+  //   git.commit()
 
-    git.checkout("pr-1")
-    fs.replace(
-      oldCode,
-      """|object OldCode {
-         |  // This is old code, where var's blossom
-         |  var oldVar = 1
-         |  // It's not ok to add new vars
-         |  var newVar = 2
-         |}""".stripMargin
-    )
-    fs.mv(oldCode, newCode)
-    git.add(oldCode)
-    git.add(newCode)
-    git.commit()
+  //   git.checkout("pr-1")
+  //   fs.replace(
+  //     oldCode,
+  //     """|object OldCode {
+  //        |  // This is old code, where var's blossom
+  //        |  var oldVar = 1
+  //        |  // It's not ok to add new vars
+  //        |  var newVar = 2
+  //        |}""".stripMargin
+  //   )
+  //   fs.mv(oldCode, newCode)
+  //   git.add(oldCode)
+  //   git.add(newCode)
+  //   git.commit()
 
-    val obtained = runDiff(cli)
+  //   val obtained = runDiff(cli)
 
-    val expected =
-      s"""|Running DisableSyntax
-          |$newCodeAbsPath:5:3: error: [DisableSyntax.keywords.var] var is disabled
-          |  var newVar = 2
-          |  ^
-          |""".stripMargin
+  //   val expected =
+  //     s"""|Running DisableSyntax
+  //         |$newCodeAbsPath:5:3: error: [DisableSyntax.keywords.var] var is disabled
+  //         |  var newVar = 2
+  //         |  ^
+  //         |""".stripMargin
 
-    assertNoDiff(obtained, expected)
-  }
+  //   assertNoDiff(obtained, expected)
+  // }
 
-  test("not a git repo") {
-    val fs = new Fs()
-    addConf(fs)
-    val cli = new Cli(fs.workingDirectory)
-    val obtained = runDiff(cli)
-    val expected =
-      s"error: ${fs.workingDirectory} is not a git repository"
+  // test("not a git repo") {
+  //   val fs = new Fs()
+  //   addDisableSyntaxConf(fs)
+  //   val cli = new Cli(fs.workingDirectory)
+  //   val obtained = runDiff(cli)
+  //   val expected =
+  //     s"error: ${fs.workingDirectory} is not a git repository"
 
-    assert(obtained.startsWith(expected))
-  }
+  //   assert(obtained.startsWith(expected))
+  // }
 
-  gitTest("custom base") { (fs, git, cli) =>
-    val oldCode = "old.scala"
-    val newCode = "new.scala"
-    val newCodeAbsPath = fs.absPath(newCode)
+  // gitTest("custom base") { (fs, git, cli) =>
+  //   val oldCode = "old.scala"
+  //   val newCode = "new.scala"
+  //   val newCodeAbsPath = fs.absPath(newCode)
 
-    fs.add(
-      oldCode,
-      """|object OldCode {
-         |  // This is old code, where var's blossom
-         |  var oldVar = 1
-         |}""".stripMargin)
-    git.add(oldCode)
-    addConf(fs, git)
-    git.commit()
+  //   fs.add(
+  //     oldCode,
+  //     """|object OldCode {
+  //        |  // This is old code, where var's blossom
+  //        |  var oldVar = 1
+  //        |}""".stripMargin)
+  //   git.add(oldCode)
+  //   addDisableSyntaxConf(fs, git)
+  //   git.commit()
 
-    val baseBranch = "2.10.X"
+  //   val baseBranch = "2.10.X"
 
-    git.checkout(baseBranch)
-    git.deleteBranch("master")
+  //   git.checkout(baseBranch)
+  //   git.deleteBranch("master")
 
-    git.checkout("pr-1")
-    fs.replace(
-      oldCode,
-      """|object OldCode {
-         |  // This is old code, where var's blossom
-         |  var oldVar = 1
-         |  // It's not ok to add new vars
-         |  var newVar = 2
-         |}""".stripMargin
-    )
-    fs.mv(oldCode, newCode)
-    git.add(oldCode)
-    git.add(newCode)
-    git.commit()
+  //   git.checkout("pr-1")
+  //   fs.replace(
+  //     oldCode,
+  //     """|object OldCode {
+  //        |  // This is old code, where var's blossom
+  //        |  var oldVar = 1
+  //        |  // It's not ok to add new vars
+  //        |  var newVar = 2
+  //        |}""".stripMargin
+  //   )
+  //   fs.mv(oldCode, newCode)
+  //   git.add(oldCode)
+  //   git.add(newCode)
+  //   git.commit()
 
-    val obtained = runDiff(cli, s"--diff-base=$baseBranch")
+  //   val obtained = runDiff(cli, s"--diff-base=$baseBranch")
 
-    val expected =
-      s"""|Running DisableSyntax
-          |$newCodeAbsPath:5:3: error: [DisableSyntax.keywords.var] var is disabled
-          |  var newVar = 2
-          |  ^
-          |""".stripMargin
+  //   val expected =
+  //     s"""|Running DisableSyntax
+  //         |$newCodeAbsPath:5:3: error: [DisableSyntax.keywords.var] var is disabled
+  //         |  var newVar = 2
+  //         |  ^
+  //         |""".stripMargin
 
-    assertNoDiff(obtained, expected)
-  }
+  //   assertNoDiff(obtained, expected)
+  // }
 
-  gitTest("#483 unkown git hash") { (fs, git, cli) =>
-    val oldCode = "old.scala"
+  // gitTest("#483 unkown git hash") { (fs, git, cli) =>
+  //   val oldCode = "old.scala"
 
-    fs.add(
-      oldCode,
-      """|object OldCode {
-         |  // This is old code, where var's blossom
-         |  var oldVar = 1
-         |}""".stripMargin)
-    git.add(oldCode)
-    addConf(fs, git)
-    git.commit()
+  //   fs.add(
+  //     oldCode,
+  //     """|object OldCode {
+  //        |  // This is old code, where var's blossom
+  //        |  var oldVar = 1
+  //        |}""".stripMargin)
+  //   git.add(oldCode)
+  //   addDisableSyntaxConf(fs, git)
+  //   git.commit()
 
-    val nonExistingHash = "7777777777777777777777777777777777777777"
-    val obtained = runDiff(cli, s"--diff-base=$nonExistingHash")
-    val expected =
-      s"error: '$nonExistingHash' unknown revision or path not in the working tree."
-    assert(obtained.startsWith(expected))
+  //   val nonExistingHash = "7777777777777777777777777777777777777777"
+  //   val obtained = runDiff(cli, s"--diff-base=$nonExistingHash")
+  //   val expected =
+  //     s"error: '$nonExistingHash' unknown revision or path not in the working tree."
+  //   assert(obtained.startsWith(expected))
 
-    val wrongHashFormat = "777"
-    val obtained2 = runDiff(cli, s"--diff-base=$wrongHashFormat")
-    val expected2 =
-      s"error: '$wrongHashFormat' unknown revision or path not in the working tree."
-    assert(obtained2.startsWith(expected2))
-  }
+  //   val wrongHashFormat = "777"
+  //   val obtained2 = runDiff(cli, s"--diff-base=$wrongHashFormat")
+  //   val expected2 =
+  //     s"error: '$wrongHashFormat' unknown revision or path not in the working tree."
+  //   assert(obtained2.startsWith(expected2))
+  // }
 
-  gitTest("works on Patch") { (fs, git, cli) =>
-    val code = "code.scala"
-    val foo1 =
+  // gitTest("works on Patch") { (fs, git, cli) =>
+  //   val code = "code.scala"
+  //   val foo1 =
+  //     """|object A {
+  //        |  def foo() {}
+  //        |}
+  //        |""".stripMargin
+
+  //   val bar1 =
+  //     """|object B {
+  //        |  def bar() {}
+  //        |}
+  //        |""".stripMargin
+
+  //   val bar2 =
+  //     """|object B {
+  //        |  def bar(): Unit = {}
+  //        |}
+  //        |""".stripMargin
+
+  //   fs.add(code, foo1)
+  //   git.add(code)
+  //   fs.add(confFile, "rules = ProcedureSyntax")
+  //   git.add(confFile)
+  //   git.commit()
+
+  //   git.checkout("pr-1")
+  //   fs.replace(
+  //     code,
+  //     s"""|$foo1
+  //         |
+  //         |$bar1""".stripMargin
+  //   )
+  //   git.add(code)
+  //   git.commit()
+
+  //   runDiffOk(cli)
+  //   val obtained = fs.read(code)
+  //   val expected =
+  //     s"""|$foo1
+  //         |
+  //         |$bar2""".stripMargin // only bar is modified
+  //   assertNoDiff(obtained, expected)
+  // }
+
+  gitTest("works on Patch Semantic") { (fs, git, cli) =>
+    val code = "src/main/scala/code.scala"
+    val code1 =
       """|object A {
-         |  def foo() {}
-         |}
-         |""".stripMargin
-
-    val bar1 =
-      """|object B {
-         |  def bar() {}
-         |}
-         |""".stripMargin
-
-    val bar2 =
-      """|object B {
-         |  def bar(): Unit = {}
-         |}
-         |""".stripMargin
-
-    fs.add(code, foo1)
+         |  def complex = List(1)
+         |  println("")
+         |}""".stripMargin
+    fs.add(code, code1)
     git.add(code)
-    fs.add(confFile, "rules = ProcedureSyntax")
-    git.add(confFile)
     git.commit()
 
     git.checkout("pr-1")
-    fs.replace(
-      code,
-      s"""|$foo1
-          |
-          |$bar1""".stripMargin
-    )
+    val code2 =
+      """|object A {
+         |  def complex = List(1)
+         |  def complexAgain = List(2)
+         |  println("")
+         |}""".stripMargin
+    fs.replace(code, code2)
     git.add(code)
     git.commit()
 
-    runDiffOk(cli)
+    // compile setup
+    val build = "build.sbt"
+    fs.add(
+      build,
+      """|scalaVersion := "2.12.4"
+         |scalacOptions += "-Yrangepos"
+         |addCompilerPlugin("org.scalameta" % "semanticdb-scalac" % "2.1.5" cross CrossVersion.full)
+         |""".stripMargin
+    )
+    val buildVersion = "project/build.properties"
+    fs.add(buildVersion, "sbt.version=0.13.16")
+
+    val conf =
+      """|rules = ExplicitResultTypes
+         |ExplicitResultTypes {
+         |    memberKind=[Def]
+         |    memberVisibility=[Public]
+         |}""".stripMargin
+
+    fs.add(confFile, conf)
+
+    sbtCompile(fs.workingDirectory)
+    runDiffOk(cli, code)
+
     val obtained = fs.read(code)
     val expected =
-      s"""|$foo1
-          |
-          |$bar2""".stripMargin // only bar is modified
+      """|object A {
+         |  def complex = List(1)
+         |  def complexAgain: _root_.scala.collection.immutable.List[_root_.scala.Int] = List(2)
+         |  println("")
+         |}""".stripMargin
     assertNoDiff(obtained, expected)
+  }
+
+  def sbtCompile(workingDirectory: Path): Unit = {
+    import java.lang.ProcessBuilder
+    import scala.io.Source
+    val pb = new ProcessBuilder()
+    pb.command("sbt", "compile")
+    pb.directory(workingDirectory.toFile)
+    pb.redirectErrorStream(true)
+    val process = pb.start
+    val out = Source.fromInputStream(process.getInputStream)
+    out.getLines.foreach(line => println("  " + line))
+    out.close()
+    process.waitFor()
   }
 
   private def runDiff(cli: Cli, args: String*): String =
@@ -276,12 +346,12 @@ class CliGitDiffTests() extends FunSuite with DiffAssertions {
     noColor(cli.run(ok, "--non-interactive" :: "--diff" :: args))
 
   private val confFile = ".scalafix.conf"
-  private def addConf(fs: Fs, git: Git): Unit = {
-    addConf(fs)
+  private def addDisableSyntaxConf(fs: Fs, git: Git): Unit = {
+    addDisableSyntaxConf(fs)
     git.add(confFile)
   }
 
-  private def addConf(fs: Fs): Unit = {
+  private def addDisableSyntaxConf(fs: Fs): Unit = {
     fs.add(
       confFile,
       """|rules = DisableSyntax
@@ -301,10 +371,8 @@ class CliGitDiffTests() extends FunSuite with DiffAssertions {
     }
   }
 
-  private class Fs() {
-    val workingDirectory: Path =
-      Files.createTempDirectory("scalafix")
-
+  private class Fs(
+      val workingDirectory: Path = Files.createTempDirectory("scalafix")) {
     workingDirectory.toFile.deleteOnExit()
 
     def add(filename: String, content: String): Unit =
@@ -334,7 +402,9 @@ class CliGitDiffTests() extends FunSuite with DiffAssertions {
         filename: String,
         content: String,
         op: StandardOpenOption): Unit = {
-      Files.write(path(filename), content.getBytes, op)
+      val to = path(filename)
+      Files.createDirectories(to.getParent)
+      Files.write(to, content.getBytes, op)
     }
 
     private def path(filename: String): Path =

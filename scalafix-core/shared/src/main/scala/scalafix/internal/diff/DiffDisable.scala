@@ -1,7 +1,6 @@
 package scalafix.internal.diff
 
-import scala.meta.inputs.Input
-import scala.meta.Position
+import scala.meta.{Input, Position, AbsolutePath}
 
 import scala.collection.mutable.StringBuilder
 
@@ -13,41 +12,54 @@ object DiffDisable {
 }
 
 sealed trait DiffDisable {
-  def isDisabled(position: Position): Boolean
-  def isDisabled(file: Input): Boolean
+  def isDisabled(position: Position, sourceroot: AbsolutePath): Boolean
+  def isDisabled(file: Input, sourceroot: AbsolutePath): Boolean
 }
 
 private object EmptyDiff extends DiffDisable {
-  def isDisabled(position: Position): Boolean = false
-  def isDisabled(file: Input): Boolean = false
+  def isDisabled(position: Position, sourceroot: AbsolutePath): Boolean = false
+  def isDisabled(file: Input, sourceroot: AbsolutePath): Boolean = false
 }
 
 private class FullDiffDisable(diffs: List[GitDiff]) extends DiffDisable {
-  private val newFiles: Set[Input] = diffs.collect {
-    case NewFile(input) => input
+  private val newFiles: Set[AbsolutePath] = diffs.collect {
+    case NewFile(path) => path
   }.toSet
 
-  private val modifiedFiles: Map[Input, IntervalSet] = diffs.collect {
-    case ModifiedFile(input, changes) => {
+  private val modifiedFiles: Map[AbsolutePath, IntervalSet] = diffs.collect {
+    case ModifiedFile(path, changes) => {
       val ranges = changes.map {
-        case GitChange(start, end) => (start, end)
+        case GitChange(start, end) => (start, end - 1)
       }
-      input -> IntervalSet(ranges)
+      path -> IntervalSet(ranges)
     }
   }.toMap
 
-  def isDisabled(file: Input): Boolean =
-    !(newFiles.contains(file) || modifiedFiles.contains(file))
+  def toPath(file: Input, sourceroot: AbsolutePath): AbsolutePath = {
+    file match {
+      case Input.VirtualFile(relativePath, _) =>
+        sourceroot.resolve(relativePath)
+      case Input.File(absolutePath, _) => absolutePath
+      case _ => throw new Exception("expecting VirtualFile or File")
+    }
+  }
 
-  def isDisabled(position: Position): Boolean = {
+  def isDisabled(file: Input, sourceroot: AbsolutePath): Boolean = {
+    val path = toPath(file, sourceroot)
+    !(newFiles.contains(path) || modifiedFiles.contains(path))
+  }
+
+  def isDisabled(position: Position, sourceroot: AbsolutePath): Boolean = {
+    val path = toPath(position.input, sourceroot)
+
     def isAddition: Boolean =
-      newFiles.contains(position.input)
+      newFiles.contains(path)
 
     def isModification: Boolean = {
       val startLine = position.startLine
       val endLine = position.endLine
       modifiedFiles
-        .get(position.input)
+        .get(path)
         .fold(false)(
           interval =>
             interval.intersects(
@@ -77,7 +89,7 @@ private class FullDiffDisable(diffs: List[GitDiff]) extends DiffDisable {
       case ModifiedFile(path, changes) => {
         add(path.toString)
         changes.foreach {
-          case GitChange(start, end) => add(s"  [$start, $end]")
+          case GitChange(start, end) => add(s"  [${start + 1}, ${end + 1}]")
         }
       }
       case _ => ()

@@ -43,6 +43,7 @@ object SemanticRuleSuite {
 abstract class SemanticRuleSuite(
     val index: SemanticdbIndex,
     val expectedOutputSourceroot: Seq[AbsolutePath],
+    val inputSourceroot: AbsolutePath,
     val inputBeforeSourceroot: AbsolutePath
 ) extends FunSuite
     with DiffAssertions
@@ -55,6 +56,7 @@ abstract class SemanticRuleSuite(
   ) = this(
     index,
     expectedOutputSourceroot,
+    inputSourceroot,
     inputBeforeSourceroot
   )
   def this(
@@ -102,7 +104,8 @@ abstract class SemanticRuleSuite(
             .map(edit => GitChange(edit.getBeginB, edit.getEndB))
             .toList
 
-          DiffDisable(List(ModifiedFile(diffTest.original, changes)))
+          DiffDisable(List(
+            ModifiedFile(inputSourceroot.resolve(diffTest.filename), changes)))
         } else DiffDisable.empty
 
       val (rule, config) = diffTest.config.apply()

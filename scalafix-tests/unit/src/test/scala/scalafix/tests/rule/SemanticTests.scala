@@ -16,6 +16,7 @@ class SemanticTests
         AbsolutePath(BuildInfo.outputSbtSourceroot),
         AbsolutePath(BuildInfo.outputDottySourceroot)
       ),
+      AbsolutePath(BuildInfo.inputSourceroot),
       AbsolutePath(BuildInfo.inputBeforeSourceroot)
     ) {
   runAllTests()

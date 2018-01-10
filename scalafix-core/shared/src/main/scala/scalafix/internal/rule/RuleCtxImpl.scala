@@ -72,7 +72,12 @@ case class RuleCtxImpl(
   def filter(
       patchesByName: Map[RuleName, Patch],
       index: SemanticdbIndex): (Patch, List[LintMessage]) =
-    escapeHatch.filter(patchesByName, this, index, diffDisable)
+    escapeHatch.filter(
+      patchesByName,
+      this,
+      index,
+      diffDisable,
+      config.sourceroot)
 
   def lint(msg: LintMessage): Patch =
     LintPatch(msg)
