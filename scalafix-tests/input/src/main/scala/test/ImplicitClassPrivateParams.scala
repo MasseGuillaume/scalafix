@@ -1,4 +1,4 @@
-/*
+/* ONLY
 rules = ImplicitClassPrivateParams
  */
 package test

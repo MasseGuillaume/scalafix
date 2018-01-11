@@ -22,7 +22,10 @@ case class DiffTest(
 object DiffTest {
 
   private val PrefixRegex = "\\s+(ONLY|SKIP)".r
-  private def stripPrefix(str: String) = PrefixRegex.replaceFirstIn(str, "")
+  private def stripPrefix(str: String) = {
+    val lb = 13.toChar
+    PrefixRegex.replaceFirstIn(str, "").stripSuffix("*/" + lb)
+  }
 
   def fromSemanticdbIndex(index: SemanticdbIndex): Seq[DiffTest] =
     index.documents.map { document =>
