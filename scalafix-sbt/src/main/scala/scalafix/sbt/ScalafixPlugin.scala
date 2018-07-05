@@ -40,6 +40,9 @@ object ScalafixPlugin extends AutoPlugin {
     val scalafixVerbose: SettingKey[Boolean] =
       settingKey[Boolean]("pass --verbose to scalafix")
 
+    val scalafixDepedencies: SettingKey[Seq[ModuleID]] =
+      settingKey[Seq[ModuleID]]("dependencies to add to the tool-classpath")
+
     def scalafixConfigure(configs: Configuration*): Seq[Setting[_]] =
       List(
         configureForConfigurations(
@@ -104,7 +107,10 @@ object ScalafixPlugin extends AutoPlugin {
     scalafixSettings ++ // TODO(olafur) remove this line in 0.6.0
       scalafixTaskSettings ++
       scalafixCliTaskSettings ++
-      scalafixTestTaskSettings
+      scalafixTestTaskSettings ++
+      Seq(
+        scalafixDepedencies := Seq()
+      )
   override def globalSettings: Seq[Def.Setting[_]] = Seq(
     scalafixConfig := Option(file(".scalafix.conf")).filter(_.isFile),
     cliWrapperMainClass := "scalafix.cli.Cli$",
@@ -317,17 +323,29 @@ object ScalafixPlugin extends AutoPlugin {
             if (compat && inputArgs.nonEmpty) "--rules" +: inputArgs
             else inputArgs
 
+          val toolClasspathDepedencies = scalafixDepedencies.value
+          val scalafixScala = scalafixScalaVersion.value
+          val scalafixScalaBinaryVersion = CrossVersion.binaryScalaVersion(scalafixScala)
+
+          val toolClasspathJars = ScalafixJarFetcher.fetchJars(
+            toolClasspathDepedencies,
+            scalafixScalaBinaryVersion,
+          )
+
+          val toolClasspathArgs = Seq("--tool-classpath", toolClasspathJars.mkString(":"))
+
           val sourceroot = scalafixSourceroot.value.getAbsolutePath
+
+          val sourcerootArgs = Seq("--sourceroot", sourceroot)
+
           // only fix unmanaged sources, skip code generated files.
           verbose ++
             config ++
             inputArgs0 ++
             baseArgs ++
             options ++
-            List(
-              "--sourceroot",
-              sourceroot
-            )
+            sourcerootArgs ++
+            toolClasspathArgs
         }
         val finalArgs = args ++ files.map(_.getAbsolutePath)
         val nonBaseArgs = args.filterNot(baseArgs).mkString(" ")

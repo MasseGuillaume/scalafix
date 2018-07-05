@@ -1,8 +1,11 @@
 package scalafix.internal.sbt
 
+import coursier._
+
+import sbt.ModuleID
+
 import java.io.File
 import java.io.OutputStreamWriter
-import coursier.MavenRepository
 
 private[scalafix] object ScalafixJarFetcher {
   private val SonatypeSnapshots: MavenRepository =
@@ -10,14 +13,13 @@ private[scalafix] object ScalafixJarFetcher {
   private val MavenCentral: MavenRepository =
     MavenRepository("https://repo1.maven.org/maven2")
 
-  def fetchJars(org: String, artifact: String, version: String): List[File] =
+  def fetchJars(dependencies: Set[Dependency], isSnapshot: Boolean): List[File] =
     this.synchronized {
-      import coursier._
-      val start = Resolution(Set(Dependency(Module(org, artifact), version)))
+      val start = Resolution(dependencies)
       val repositories: List[Repository] = List(
         Some(Cache.ivy2Local),
         Some(MavenCentral),
-        if (version.endsWith("-SNAPSHOT")) Some(SonatypeSnapshots)
+        if (isSnapshot) Some(SonatypeSnapshots)
         else None
       ).flatten
 
@@ -46,5 +48,23 @@ private[scalafix] object ScalafixJarFetcher {
         jars
       }
     }
+
+  def fetchJars(org: String, artifact: String, version: String): List[File] =
+    fetchJars(Set(Dependency(Module(org, artifact), version)), isSnapshot = version.endsWith("-SNAPSHOT"))
+
+  def fetchJars(dependencies: Seq[ModuleID], scalafixScalaBinaryVersion: String): List[File] = {
+    val converted =
+      dependencies.map(dep =>
+        Dependency(
+          Module(
+            dep.organization,
+            dep.name + "_" + scalafixScalaBinaryVersion
+          ),
+          dep.revision
+        )
+      )
+
+    fetchJars(converted.toSet, isSnapshot = false)
+  }
 
 }
