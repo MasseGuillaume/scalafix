@@ -62,7 +62,7 @@ trait HasFlags {
     if (hasFlag(STATIC)) append("STATIC")
     if (hasFlag(VAL)) append("VAL")
     if (hasFlag(VAR)) append("VAR")
-    if (hasFlag(METHOD)) append("METHOD")
+    if (hasFlag(METHOD)) append("DEF")
     if (hasFlag(MACRO)) append("MACRO")
     if (hasFlag(TYPE)) append("TYPE")
     if (hasFlag(PARAM)) append("PARAM")

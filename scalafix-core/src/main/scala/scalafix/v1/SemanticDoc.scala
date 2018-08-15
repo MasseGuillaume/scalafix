@@ -21,6 +21,11 @@ final class SemanticDoc private[scalafix] (
     private[scalafix] val symtab: SymbolTable
 ) extends SemanticContext {
 
+  def debug(): Unit = {
+    println(sdoc.toProtoString)
+    println(symtab)
+  }
+
   override def toString: String = s"SemanticDoc(${input.syntax})"
 
   // ==========
@@ -66,6 +71,10 @@ final class SemanticDoc private[scalafix] (
   // ========
   // Privates
   // ========
+
+  private[scalafix] def link(sym: Sym): s.Signature = {
+    symtab.info(sym.value).get.signature
+  }
 
   private[scalafix] def symbols(pos: Position): Iterator[Sym] = {
     val result = occurrences.getOrDefault(

@@ -147,7 +147,7 @@ object DocSemanticdbIndex {
       dflags
     }
 
-    new LegacyCodePrinter().convertDenotation(
+    new LegacyCodePrinter(doc).convertDenotation(
       info.signature,
       dflags,
       info.name
@@ -181,7 +181,7 @@ object DocSemanticdbIndex {
   def syntheticToLegacy(doc: SemanticDoc, synthetic: s.Synthetic): Synthetic = {
     val pos =
       ScalametaInternals.positionFromRange(doc.input, synthetic.range)
-    new LegacyCodePrinter().convertSynthetic(synthetic, doc, pos)
+    new LegacyCodePrinter(doc).convertSynthetic(synthetic, pos)
   }
 
 }

@@ -11,7 +11,7 @@ import scalafix.v0
 import scalafix.v0.ResolvedName
 import scalafix.v1.SemanticDoc
 
-class LegacyCodePrinter() {
+class LegacyCodePrinter(doc: SemanticDoc) {
   case class PositionedSymbol(symbol: v0.Symbol, start: Int, end: Int)
   private val buf = List.newBuilder[PositionedSymbol]
   private val text = new StringBuilder
@@ -45,17 +45,31 @@ class LegacyCodePrinter() {
   private def pprint(signature: s.Signature): Unit = {
     signature match {
       case sig: s.ClassSignature =>
+        println("***** ClassSignature ******")
       // Scope type_parameters = 1;
       // repeated Type parents = 2;
       // Type self = 3;
       // Scope declarations = 4;
 
       case sig: s.MethodSignature =>
-        sig.typeParameters.foreach(pprint)
-        sig.parameterLists.foreach(pprint)
+        sig.typeParameters.foreach{scope =>
+          text.append(scope.symbols.map(_.desc.name).mkString("[", ", ", "]"))
+          text.append(" => ")
+        }
+
+        mkString("(", sig.parameterLists, ")"){scope =>
+          scope.symbols.foreach{ symbol =>
+            emit(symbol)
+            text.append(": ")
+            pprint(doc.link(scalafix.v1.Sym(symbol)))
+          }
+        }
+
+        text.append(": ")
         pprint(sig.returnType)
 
       case sig: s.TypeSignature =>
+        // println("***** TypeSignature ******")
       // Scope type_parameters = 1;
       // Type lower_bound = 2;
       // Type upper_bound = 3;
@@ -177,7 +191,6 @@ class LegacyCodePrinter() {
 
   def convertSynthetic(
       synthetic: s.Synthetic,
-      doc: SemanticDoc,
       pos: Position): v0.Synthetic = {
     loop(synthetic.tree)
     val input = Input.Stream(
