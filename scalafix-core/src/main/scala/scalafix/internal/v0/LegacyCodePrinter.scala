@@ -1,6 +1,7 @@
 package scalafix.internal.v0
 
 import java.nio.charset.StandardCharsets
+import scala.meta._
 import scala.meta.inputs.Input
 import scala.meta.inputs.Position
 import scala.meta.internal.semanticdb.Scala._
@@ -30,21 +31,45 @@ class LegacyCodePrinter() {
       text.append(start)
       var first = true
       trees.foreach { tree =>
-        fn(tree)
         if (first) {
           first = false
         } else {
           text.append(", ")
         }
+        fn(tree)
       }
       text.append(end)
     }
   }
 
-  private def pprint(sig: s.Signature): Unit = sig match {
-    case s.ValueSignature(tpe) =>
-      pprint(tpe)
-    case _ =>
+  private def pprint(signature: s.Signature): Unit = {
+    signature match {
+      case sig: s.ClassSignature =>
+      // Scope type_parameters = 1;
+      // repeated Type parents = 2;
+      // Type self = 3;
+      // Scope declarations = 4;
+
+      case sig: s.MethodSignature =>
+        sig.typeParameters.foreach(pprint)
+        sig.parameterLists.foreach(pprint)
+        pprint(sig.returnType)
+
+      case sig: s.TypeSignature =>
+      // Scope type_parameters = 1;
+      // Type lower_bound = 2;
+      // Type upper_bound = 3;
+
+      case sig: s.ValueSignature =>
+        pprint(sig.tpe)
+
+      case _ =>
+    }
+  }
+
+  private def pprint(scope: s.Scope): Unit = {
+    scope.symbols.foreach(emit)
+    scope.hardlinks.foreach(info => pprint(info.signature))
   }
   private def pprint(tpe: s.Type): Unit = tpe match {
     case s.TypeRef(prefix, symbol, typeArguments) =>
@@ -75,23 +100,14 @@ class LegacyCodePrinter() {
       types.foreach(pprint)
     case s.StructuralType(tpe, declarations) =>
       pprint(tpe)
-      declarations.foreach { s =>
-        s.symbols.foreach(emit)
-        s.hardlinks.foreach(info => pprint(info.signature))
-      }
+      declarations.foreach(pprint)
     case s.AnnotatedType(_, tpe) =>
       pprint(tpe)
     case s.ExistentialType(tpe, declarations) =>
       pprint(tpe)
-      declarations.foreach { s =>
-        s.symbols.foreach(emit)
-        s.hardlinks.foreach(info => pprint(info.signature))
-      }
+      declarations.foreach(pprint)
     case s.UniversalType(typeParameters, tpe) =>
-      typeParameters.foreach { s =>
-        s.symbols.foreach(emit)
-        s.hardlinks.foreach(info => pprint(info.signature))
-      }
+      typeParameters.foreach(pprint)
       pprint(tpe)
     case s.ByNameType(tpe) =>
       pprint(tpe)
@@ -159,7 +175,7 @@ class LegacyCodePrinter() {
       mkString("[", targs, "]")(pprint)
   }
 
-  def toLegacy(
+  def convertSynthetic(
       synthetic: s.Synthetic,
       doc: SemanticDoc,
       pos: Position): v0.Synthetic = {
@@ -172,5 +188,28 @@ class LegacyCodePrinter() {
       ResolvedName(symPos, sym.symbol, isDefinition = false)
     }
     v0.Synthetic(pos, input.text, names)
+  }
+
+  def convertDenotation(
+      signature: s.Signature,
+      dflags: Long,
+      name: String): v0.Denotation = {
+
+    pprint(signature)
+
+    val convertedSignature = text.result()
+    val input = Input.String(convertedSignature)
+
+    val names = buf.result().map { sym =>
+      val symPos = Position.Range(input, sym.start, sym.end)
+      ResolvedName(symPos, sym.symbol, isDefinition = false)
+    }
+
+    v0.Denotation(
+      dflags,
+      name,
+      convertedSignature,
+      names
+    )
   }
 }
