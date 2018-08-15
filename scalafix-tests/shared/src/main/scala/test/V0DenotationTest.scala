@@ -1,4 +1,5 @@
-package org.example
+// package org.example
+
 // import scala.collection
 // import scala.collection.immutable
 // import scala.collection.mutable.{
@@ -26,17 +27,23 @@ package org.example
 //   List().zip(List())
 // }
 
-
 trait A
 class B
-// object C
+object C
 
-// trait X[S]
-// trait Y[T]
-// class Z[S1, T1] extends X[S1] with Y[T1]
+trait X[S <: Any]
+trait Y[T]
+class Z[S1, T1] extends X[S1] with Y[T1]
 
 object U {
   def orElse[A1 <: A, B1 >: B](that: PartialFunction[A1, B1]): List[(A1, B1)] = Nil
-  // trait Setting { type T }
-  // type BooleanSetting <: Setting { type T = Boolean }
+  trait Setting { type T }
+  type BooleanSetting <: Setting { type T = Boolean }
 }
+
+// case class Person(name: String, age: Int)
+
+
+// case class Foo(a: Int, b: Int)(c: Int)
+
+// case class F(a: Int)

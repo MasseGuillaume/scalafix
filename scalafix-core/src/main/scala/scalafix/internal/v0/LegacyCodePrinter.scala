@@ -24,8 +24,7 @@ class LegacyCodePrinter(doc: SemanticDoc) {
     val end = text.length
     buf += PositionedSymbol(v0.Symbol(sym), start, end)
   }
-  private def mkString[T](start: String, trees: Seq[T], end: String)(
-      fn: T => Unit): Unit = {
+  private def mkString[T](start: String, trees: Seq[T], end: String, sep: String = ",")(fn: T => Unit): Unit = {
     if (trees.isEmpty) ()
     else {
       text.append(start)
@@ -42,37 +41,69 @@ class LegacyCodePrinter(doc: SemanticDoc) {
     }
   }
 
+  private def pprintTypeParameters(scope: Option[s.Scope]): Unit = {
+    scope.foreach{scope =>
+      if (scope.hardlinks.nonEmpty) {
+        println("*****")
+        println(scope.hardlinks)
+        println("*****")
+      }
+      if(scope.symbols.nonEmpty) {
+        mkString("[", scope.symbols, "]")(symbol => pprint(doc.link(scalafix.v1.Sym(symbol))))
+        text.append(" => ")
+      }
+    }
+  }
+
+  private val nothing = s.TypeRef(s.NoType, "scala/Nothing#", List())
+  private val any = s.TypeRef(s.NoType, "scala/Any#", List())
+
   private def pprint(signature: s.Signature): Unit = {
     signature match {
       case sig: s.ClassSignature =>
-        println("***** ClassSignature ******")
-      // Scope type_parameters = 1;
-      // repeated Type parents = 2;
-      // Type self = 3;
-      // Scope declarations = 4;
+        pprintTypeParameters(sig.typeParameters)
+        // pprint(sig.parents)
+        pprint(sig.self)
+        // pprint(sig.declarations)
 
       case sig: s.MethodSignature =>
-        sig.typeParameters.foreach{scope =>
-          text.append(scope.symbols.map(_.desc.name).mkString("[", ", ", "]"))
-          text.append(" => ")
-        }
+        pprintTypeParameters(sig.typeParameters)
 
-        mkString("(", sig.parameterLists, ")"){scope =>
-          scope.symbols.foreach{ symbol =>
+        sig.parameterLists.foreach{ scope =>
+          if (scope.hardlinks.nonEmpty) {
+            println("*****")
+            println(scope.hardlinks)
+            println("*****")
+          }
+          mkString("(", scope.symbols ,")"){ symbol =>
             emit(symbol)
             text.append(": ")
             pprint(doc.link(scalafix.v1.Sym(symbol)))
           }
         }
-
-        text.append(": ")
         pprint(sig.returnType)
 
       case sig: s.TypeSignature =>
-        // println("***** TypeSignature ******")
-      // Scope type_parameters = 1;
-      // Type lower_bound = 2;
-      // Type upper_bound = 3;
+        pprintTypeParameters(sig.typeParameters)
+
+        val hasBounds =
+          sig.lowerBound != sig.upperBound &&
+            (sig.lowerBound != nothing ||
+             sig.upperBound != any)
+
+        if (sig.typeParameters.map(_.symbols.isEmpty).getOrElse(true) && hasBounds) {
+          text.append("_")
+        }
+        if (sig.lowerBound != sig.upperBound) {
+          if (sig.lowerBound != nothing) {
+            text.append(" >: ")
+            pprint(sig.lowerBound)
+          }
+          if (sig.upperBound != any) {
+            text.append(" <: ")
+            pprint(sig.upperBound)
+          }
+        }
 
       case sig: s.ValueSignature =>
         pprint(sig.tpe)

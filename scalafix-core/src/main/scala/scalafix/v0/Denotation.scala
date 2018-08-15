@@ -14,7 +14,15 @@ final case class Denotation(
   override def toString: String = syntax
 
   def syntax: String = {
-    val s_info = if (signature != "") ": " + signature else ""
+    val s_info =
+      if (signature != "") {
+        val sep =
+          if (isType || isTypeParam) " ="
+          else ":"
+
+        sep + " " + signature
+      } else ""
+
     val s_names = ResolvedName.syntax(names)
     val s_name = if (name.contains(" ")) s"`$name`" else name
     s"$flagSyntax $s_name" + s_info + s_names
